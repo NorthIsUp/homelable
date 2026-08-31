@@ -417,7 +417,26 @@ STATUS_CHECKER_INTERVAL=60
 # no node or service checks run, approved devices get no default `ping`, and
 # Settings shows the checks as disabled. Env-only (default true).
 # STATUS_CHECKER_ENABLED=false
+
+# Kubernetes topology — disabled by default. See docs/kubernetes-topology.md
+# for the least-privilege RBAC manifest and security boundaries.
+# KUBERNETES_ENABLED=true
+# KUBERNETES_SOURCE=in_cluster       # auto | in_cluster | kubeconfig
+# KUBERNETES_CLUSTER_NAME=kubernetes
+# KUBERNETES_SYNC_INTERVAL=300
 ```
+
+### Kubernetes topology (optional)
+
+Kubernetes topology is an observed, read-only graph separate from the editable
+canvas. It is disabled by default. For a production deployment, run the
+backend in the target cluster with a projected, least-privilege ServiceAccount
+and set `KUBERNETES_SOURCE=in_cluster`.
+
+Do not grant Secrets, ConfigMaps, `pods/log`, `pods/exec`, or any mutating
+Kubernetes verb. The full RBAC manifest, an external Docker/kubeconfig example,
+data-redaction rules, and sync-state behaviour are in
+[docs/kubernetes-topology.md](./docs/kubernetes-topology.md).
 
 ### OpenID Connect (optional)
 

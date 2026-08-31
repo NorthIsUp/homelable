@@ -11,6 +11,12 @@ RESOURCE_LIST = [
     Resource(uri="homelable://scan/pending",   name="Pending devices", description="Discovered devices awaiting approval", mimeType="application/json"),
     Resource(uri="homelable://scan/runs",      name="Scan history",    description="Recent scan run history", mimeType="application/json"),
     Resource(uri="homelable://documents",      name="Documentation",   description="Every document as a summary — no bodies; read homelable://documents/<id> for one", mimeType="application/json"),
+    Resource(
+        uri="homelable://kubernetes/topology",
+        name="Kubernetes topology",
+        description="Read-only, sanitized observed Kubernetes topology (resources, relationships, and sync state)",
+        mimeType="application/json",
+    ),
 ]
 
 ROUTES = {
@@ -20,6 +26,7 @@ ROUTES = {
     "homelable://scan/pending": "/api/v1/scan/pending",
     "homelable://scan/runs":    "/api/v1/scan/runs",
     "homelable://documents":    "/api/v1/documents",
+    "homelable://kubernetes/topology": "/api/v1/kubernetes/topology",
 }
 
 # read_resource() also serves homelable://nodes/<id>, which is not in
