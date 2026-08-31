@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Plus, Save, ScanLine, ChevronLeft, ChevronRight, LayoutDashboard, Clock, Square, Settings, LogOut, Download, Type, PlusCircle, Pencil, Trash2, Rows3, BookOpen, Loader2 } from 'lucide-react'
+import { Plus, Save, ScanLine, ChevronLeft, ChevronRight, LayoutDashboard, Clock, Square, Settings, LogOut, Download, Type, PlusCircle, Pencil, Trash2, Rows3, BookOpen, Loader2, Boxes } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCanvasStore } from '@/stores/canvasStore'
@@ -30,9 +30,11 @@ interface SidebarProps {
   onOpenSettings: () => void
   onOpenHistory: () => void
   onOpenInventory: (deviceId?: string, status?: 'pending' | 'hidden') => void
+  onOpenKubernetes?: () => void
+  showKubernetes?: boolean
 }
 
-export function Sidebar({ onAddNode, onAddGroupRect, onAddText, onScan, onOpenImports, onSave, onOpenSettings, onOpenHistory, onOpenInventory }: SidebarProps) {
+export function Sidebar({ onAddNode, onAddGroupRect, onAddText, onScan, onOpenImports, onSave, onOpenSettings, onOpenHistory, onOpenInventory, onOpenKubernetes, showKubernetes = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const logout = useAuthStore((s) => s.logout)
   const { designs, activeDesignId, activeDesignType, setActiveDesign, addDesign, updateDesign, removeDesign } = useDesignStore()
@@ -242,17 +244,26 @@ export function Sidebar({ onAddNode, onAddGroupRect, onAddText, onScan, onOpenIm
           icon={isRack ? Rows3 : LayoutDashboard}
           label={isRack ? 'Rack view' : 'Canvas'}
           collapsed={collapsed}
-          active={view === 'canvas'}
-          onClick={() => setView('canvas')}
+          active={view === 'canvas' && !showKubernetes}
+          onClick={() => { setView('canvas'); if (showKubernetes) onOpenKubernetes?.() }}
         />
         {!STANDALONE && (
           <SidebarItem
             icon={BookOpen}
             label="Documentation"
             collapsed={collapsed}
-            active={view === 'documentation'}
-            onClick={() => setView('documentation')}
+            active={view === 'documentation' && !showKubernetes}
+            onClick={() => { setView('documentation'); if (showKubernetes) onOpenKubernetes?.() }}
             dataTour="documentation"
+          />
+        )}
+        {!STANDALONE && onOpenKubernetes && (
+          <SidebarItem
+            icon={Boxes}
+            label="Kubernetes"
+            collapsed={collapsed}
+            active={showKubernetes}
+            onClick={onOpenKubernetes}
           />
         )}
         {/* The hidden devices are a filter of this same modal, reached from
