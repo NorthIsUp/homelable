@@ -7,10 +7,13 @@ A Homelable browser can never submit a kubeconfig or bearer token.
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, Protocol
+
+logger = logging.getLogger(__name__)
 
 TopologyLists = dict[str, list[dict[str, Any]]]
 
@@ -86,8 +89,14 @@ class _KubernetesTopologyClientBase:
                 call(_request_timeout=self.request_timeout_seconds),
                 timeout=self.request_timeout_seconds + 1,
             )
-        except Exception as exc:
-            raise KubernetesClientError(f"Unable to list Kubernetes {name}") from exc
+        except Exception:
+            # One unreadable resource must not cost the whole topology. RBAC
+            # can omit a kind, and a strict client model can reject a real
+            # payload — kubernetes_asyncio's V1EndpointSlice refuses
+            # `endpoints: null`, which a slice with no ready addresses sends.
+            # The graph is better off missing one edge type than empty.
+            logger.warning("Unable to list Kubernetes %s; continuing without it", name, exc_info=True)
+            return name, []
         items = getattr(response, "items", [])
         output: list[dict[str, Any]] = []
         for item in items:
