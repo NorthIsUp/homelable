@@ -15,7 +15,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ghcr.io/${{ github.repository_owner }}/homelable-backend
+          # -patched, not -backend: a hand `docker push` to
+          # ghcr.io/<owner>/homelable-backend created that package outside any
+          # repo, and a repo's GITHUB_TOKEN cannot write a package it does not
+          # own. Granting that access is UI-only, so this publishes under a name
+          # CI creates and therefore owns. Rename back once the orphan is gone.
+          - image: ghcr.io/${{ github.repository_owner }}/homelable-backend-patched
             context: .
             dockerfile: Dockerfile.backend
             build_args: ""
