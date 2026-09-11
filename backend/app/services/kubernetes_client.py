@@ -44,12 +44,15 @@ class _KubernetesTopologyClientBase:
             apps = client.AppsV1Api(api_client)
             batch = client.BatchV1Api(api_client)
             networking = client.NetworkingV1Api(api_client)
+            # EndpointSlice lives in discovery.k8s.io, not core — CoreV1Api has
+            # no list_endpoint_slice_* and the collector died on the attribute.
+            discovery = client.DiscoveryV1Api(api_client)
             calls = {
                 "nodes": core.list_node,
                 "namespaces": core.list_namespace,
                 "pods": core.list_pod_for_all_namespaces,
                 "services": core.list_service_for_all_namespaces,
-                "endpoint_slices": core.list_endpoint_slice_for_all_namespaces,
+                "endpoint_slices": discovery.list_endpoint_slice_for_all_namespaces,
                 "endpoints": core.list_endpoints_for_all_namespaces,
                 "replicasets": apps.list_replica_set_for_all_namespaces,
                 "deployments": apps.list_deployment_for_all_namespaces,
