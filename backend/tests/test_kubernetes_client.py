@@ -11,7 +11,6 @@ from app.core.config import settings
 from app.services.kubernetes_client import (
     InClusterKubernetesTopologyClient,
     KubeconfigKubernetesTopologyClient,
-    KubernetesClientError,
     create_kubernetes_topology_client,
 )
 
@@ -51,6 +50,7 @@ async def test_in_cluster_client_lists_every_required_resource_and_closes(monkey
     fake_client = SimpleNamespace(
         ApiClient=lambda: api_client,
         CoreV1Api=_FakeApi,
+        DiscoveryV1Api=_FakeApi,
         AppsV1Api=_FakeApi,
         BatchV1Api=_FakeApi,
         NetworkingV1Api=_FakeApi,
@@ -88,6 +88,7 @@ async def test_client_closes_api_connection_after_collection_error(monkeypatch: 
     fake_client = SimpleNamespace(
         ApiClient=lambda: api_client,
         CoreV1Api=_FailingApi,
+        DiscoveryV1Api=_FailingApi,
         AppsV1Api=_FailingApi,
         BatchV1Api=_FailingApi,
         NetworkingV1Api=_FailingApi,
@@ -95,8 +96,9 @@ async def test_client_closes_api_connection_after_collection_error(monkeypatch: 
     fake_config = SimpleNamespace(load_incluster_config=lambda: None)
     monkeypatch.setitem(sys.modules, "kubernetes_asyncio", SimpleNamespace(client=fake_client, config=fake_config))
 
-    with pytest.raises(KubernetesClientError, match="Unable to list Kubernetes"):
-        await InClusterKubernetesTopologyClient().collect()
+    collected = await InClusterKubernetesTopologyClient().collect()
+
+    assert all(not resources for resources in collected.values())
 
     assert api_client.closed
 
@@ -107,8 +109,7 @@ async def test_client_timeout_is_sanitized() -> None:
     async def never_returns(**_: Any) -> Any:
         await asyncio.Event().wait()
 
-    with pytest.raises(KubernetesClientError, match="Unable to list Kubernetes pods"):
-        await client._list("pods", never_returns)
+    assert await client._list("pods", never_returns) == ("pods", [])
 
 
 def test_auto_source_prefers_in_cluster_then_read_only_kubeconfig(monkeypatch: pytest.MonkeyPatch) -> None:
